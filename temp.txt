@@ -1,0 +1,35 @@
+import json
+import pprint
+from glob import glob
+
+import numpy as np
+import pandas as pd
+
+def preproc_qg_data(json_data_list):
+    qa_list = []
+    for json_data in json_data_list:
+        for pqa in json_data['paragraphs']:
+            for qa in pqa['qas']:
+                row = {}
+                # row['pqa_id'] = '{}_{}'.format(json_data['doc_id'], qa['question_id'])
+                row['question'] = qa['question']
+                row['paragraph'] = pqa['context']
+                row['answer'] = qa['answers']['text']
+                _answer_start = qa['answers']['answer_start']
+                _answer_len = len(qa['answers']['text'])
+                _answer_end = _answer_start + _answer_len
+    #             assert row['answer'] == pqa['context'][_answer_start:_answer_end]
+                if row['answer'] != pqa['context'][_answer_start:_answer_end]:
+    #                 print(row['answer'])
+    #                 print(pqa['context'][_answer_start:_answer_end])
+                    continue # index 안 맞는 경우 제외. (e.g. 첨단 과학문화 테마공원, 단 과학문화 테마공원”)
+                row['paragraph_answer'] = '{}<hl> {} <hl>{}'.format(pqa['context'][_answer_start:], pqa['context'][_answer_start:_answer_end], pqa['context'][_answer_end:])
+                row['paragraph_question'] = 'question: {}, context: {}'.format(row['question'], pqa['context'])
+                
+                #####################################################
+                row['sentence'] = ''
+                row['paragraph_sentence'] = ''
+                row['sentence_answer'] = ''
+                qa_list.append(row)
+                
+    return qa_list
